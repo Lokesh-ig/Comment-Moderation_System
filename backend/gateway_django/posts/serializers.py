@@ -237,7 +237,18 @@ class PostSerializer(serializers.ModelSerializer):
     
     def get_comments(self, obj):
         allowed_comments = obj.comments.filter(status='allowed').order_by('-created_at')
-        return CommentSerializer(allowed_comments, many=True, context=self.context).data
+        from .moderation_utils import BAD_WORDS_PATTERN, SEVERE_WORDS_PATTERN
+        clean_comments = []
+        for c in allowed_comments:
+            if SEVERE_WORDS_PATTERN.search(c.text):
+                c.status = 'deleted'
+                c.save(update_fields=['status'])
+            elif BAD_WORDS_PATTERN.search(c.text):
+                c.status = 'flagged'
+                c.save(update_fields=['status'])
+            else:
+                clean_comments.append(c)
+        return CommentSerializer(clean_comments, many=True, context=self.context).data
 
     def get_comment_count(self, obj):
         return obj.comments.filter(status='allowed').count()

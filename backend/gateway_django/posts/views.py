@@ -154,7 +154,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         if caption:
             try:
                 # Use AI_SERVICE_URL relative to where it's defined (usually at top of views.py)
-                response = requests.post(AI_SERVICE_URL, json={"text": caption}, timeout=1.8)
+                response = requests.post(AI_SERVICE_URL, json={"text": caption}, timeout=5)
                 if response.status_code == 200:
                     scores = response.json()
                     toxic_score = scores.get("toxic", 0.0)
@@ -321,22 +321,19 @@ def create_comment(request):
     
     # 2. Fallback to HTTP endpoints if direct prediction unavailable
     if not scores:
-        raw_urls = [
+        service_urls = [
             os.environ.get("AI_SERVICE_URL"),
             "https://comment-moderationsystem-production.up.railway.app/predict",
             "http://comment-moderationsystem.railway.internal:5000/predict",
             "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
         ]
-        service_urls = []
-        for u in raw_urls:
-            if u and u not in service_urls:
-                service_urls.append(u)
-
         for url in service_urls:
+            if not url:
+                continue
             try:
                 if "hf.space" in url:
                     target_url = url if ("/call/predict" in url or "/api/predict" in url) else f"{url.rstrip('/')}/api/predict"
-                    resp = requests.post(target_url, json={"data": [text]}, timeout=1.8)
+                    resp = requests.post(target_url, json={"data": [text]}, timeout=5)
                     res_json = resp.json()
                     if isinstance(res_json, dict):
                         data = res_json.get("data", [])
@@ -345,7 +342,7 @@ def create_comment(request):
                         else:
                             scores = res_json
                 else:
-                    resp = requests.post(url, json={"text": text}, timeout=1.5)
+                    resp = requests.post(url, json={"text": text}, timeout=5)
                     if resp.status_code == 200:
                         scores = resp.json()
                 if scores and isinstance(scores, dict) and "toxic" in scores:
@@ -353,12 +350,28 @@ def create_comment(request):
             except Exception:
                 continue
 
-    if not scores or not isinstance(scores, dict) or "toxic" not in scores:
-        from .moderation_utils import fallback_moderate
-        _, scores = fallback_moderate(text)
+    fallback_status, fallback_scores = fallback_moderate(text)
 
-    toxic_score = float(scores.get("toxic", 0.0))
-    status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
+    if not scores or not isinstance(scores, dict):
+        scores = fallback_scores
+        status_val = fallback_status
+    else:
+        scores_list = [
+            float(scores.get("toxic", 0.0)),
+            float(scores.get("severe_toxic", 0.0)),
+            float(scores.get("obscene", 0.0)),
+            float(scores.get("threat", 0.0)),
+            float(scores.get("insult", 0.0)),
+            float(scores.get("identity_hate", 0.0))
+        ]
+        max_score = max(scores_list)
+        
+        if fallback_status == "deleted" or max_score >= 0.7:
+            status_val = "deleted"
+        elif fallback_status == "flagged" or max_score >= 0.35:
+            status_val = "flagged"
+        else:
+            status_val = "allowed"
 
     comment = Comment.objects.create(
         text=text, user=request.user, post=post, status=status_val,
