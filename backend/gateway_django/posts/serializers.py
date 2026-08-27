@@ -157,6 +157,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        username_or_email = attrs.get(self.username_field)
+        
+        if username_or_email:
+            user_obj = User.objects.filter(username__iexact=username_or_email).first() or \
+                       User.objects.filter(email__iexact=username_or_email).first()
+            if user_obj:
+                attrs[self.username_field] = user_obj.username
+
         data = super().validate(attrs)
         
         # Record Login Activity
