@@ -1,7 +1,9 @@
 django>=5.0
 djangorestframework
 django-cors-headers
+rest_framework_simplejwt
 requests
 pillow
 gunicorn
 pymysql
+whitenoise
