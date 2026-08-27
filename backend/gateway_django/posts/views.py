@@ -312,6 +312,7 @@ def create_comment(request):
         except Comment.DoesNotExist:
             return Response({"error": "Parent comment not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    ai_success = False
     scores = {}
     service_urls = [
         os.environ.get("AI_SERVICE_URL"),
@@ -338,12 +339,14 @@ def create_comment(request):
                 if resp.status_code == 200:
                     scores = resp.json()
             if scores and isinstance(scores, dict) and "toxic" in scores:
+                ai_success = True
                 break
         except Exception:
             continue
 
-    if not scores or not isinstance(scores, dict):
-        scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
+    if not ai_success or not isinstance(scores, dict):
+        # Fallback to flagged (toxic = 0.55) so unmoderated comments are reviewed instead of displayed as allowed
+        scores = {"toxic": 0.55, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.55, "identity_hate": 0.0}
 
     toxic_score = float(scores.get("toxic", 0.0))
     status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
