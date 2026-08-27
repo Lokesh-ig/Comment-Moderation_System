@@ -319,21 +319,24 @@ def create_comment(request):
     from .ai_loader import get_direct_prediction
     scores = get_direct_prediction(text)
     
-    # 2. Fallback to HTTP endpoints if direct prediction unavailable
+    # 2. Fallback to HTTP endpoints with fast 1.5s timeout
     if not scores:
-        service_urls = [
-            os.environ.get("AI_SERVICE_URL"),
+        urls_to_try = []
+        ai_env = os.environ.get("AI_SERVICE_URL")
+        if ai_env:
+            urls_to_try.append(ai_env)
+        urls_to_try.extend([
             "https://comment-moderationsystem-production.up.railway.app/predict",
-            "http://comment-moderationsystem.railway.internal:5000/predict",
-            "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
-        ]
-        for url in service_urls:
+            "http://comment-moderationsystem.railway.internal:5000/predict"
+        ])
+        
+        for url in urls_to_try:
             if not url:
                 continue
             try:
                 if "hf.space" in url:
                     target_url = url if ("/call/predict" in url or "/api/predict" in url) else f"{url.rstrip('/')}/api/predict"
-                    resp = requests.post(target_url, json={"data": [text]}, timeout=5)
+                    resp = requests.post(target_url, json={"data": [text]}, timeout=1.5)
                     res_json = resp.json()
                     if isinstance(res_json, dict):
                         data = res_json.get("data", [])
@@ -342,7 +345,7 @@ def create_comment(request):
                         else:
                             scores = res_json
                 else:
-                    resp = requests.post(url, json={"text": text}, timeout=5)
+                    resp = requests.post(url, json={"text": text}, timeout=1.5)
                     if resp.status_code == 200:
                         scores = resp.json()
                 if scores and isinstance(scores, dict) and "toxic" in scores:

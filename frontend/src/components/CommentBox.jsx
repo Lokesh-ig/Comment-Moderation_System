@@ -32,12 +32,35 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
         e.preventDefault();
         if (!text.trim() || !postId) return;
 
+        const commentText = text.trim();
+        const tempId = 'temp-' + Date.now();
+        
+        // Optimistic Comment Object for 0ms instant display
+        const tempComment = {
+            id: tempId,
+            text: commentText,
+            author_username: user?.username || 'You',
+            author_avatar_url: user?.avatar_url,
+            created_at: new Date().toISOString(),
+            status: 'allowed',
+            is_optimistic: true,
+        };
+
+        // Instantly clear input box & render comment
+        setText('');
         setLoading(true);
         setResult(null);
 
+        if (onCommentPosted) {
+            onCommentPosted(tempComment);
+        }
+        if (onCancelReply) {
+            onCancelReply();
+        }
+
         try {
             const res = await postComment({
-                text: text.trim(),
+                text: commentText,
                 post_id: postId,
                 parent_id: replyTo?.id
             });
@@ -45,21 +68,21 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
 
             const status = data.status || data.moderation_result || 'allowed';
             setResult({ status, message: data.message || '' });
-            setText('');
 
-            // Only add approved comments to the visible list
-            if (status === 'allowed' && onCommentPosted && data.comment) {
-                onCommentPosted(data.comment);
+            if (onCommentPosted && data.comment) {
+                // Replace optimistic comment with saved server comment
+                onCommentPosted(data.comment, tempId);
+            } else if (status !== 'allowed' && onCommentPosted) {
+                // Revert/Remove optimistic comment if flagged or deleted by AI
+                onCommentPosted(null, tempId);
             }
 
-            if (onCancelReply) {
-                onCancelReply();
-
-            }
-
-            // Auto-hide result after 4 seconds
+            // Auto-hide result badge after 4 seconds
             setTimeout(() => setResult(null), 4000);
         } catch (err) {
+            if (onCommentPosted) {
+                onCommentPosted(null, tempId);
+            }
             setResult({
                 status: 'error',
                 message: err.response?.data?.message || err.response?.data?.error || 'Failed to post comment',

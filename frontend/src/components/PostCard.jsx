@@ -183,9 +183,20 @@ const PostCard = ({ post, onLike, onDelete }) => {
         }
     };
 
-    const handleCommentPosted = (newComment) => {
-        setComments(prevComments => [...prevComments, newComment]);
-        setReplyTo(null); // Clear reply state
+    const handleCommentPosted = (newComment, replaceTempId = null) => {
+        setComments(prevComments => {
+            if (!newComment && replaceTempId) {
+                return prevComments.filter(c => c.id !== replaceTempId);
+            }
+            if (replaceTempId) {
+                const exists = prevComments.some(c => c.id === replaceTempId);
+                if (exists) {
+                    return prevComments.map(c => c.id === replaceTempId ? newComment : c);
+                }
+            }
+            return [...prevComments, newComment];
+        });
+        setReplyTo(null);
     };
 
     const handleCommentDeleted = (commentId) => {
