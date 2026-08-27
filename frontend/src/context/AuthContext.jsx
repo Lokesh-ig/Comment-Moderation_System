@@ -49,7 +49,6 @@ export const AuthProvider = ({ children }) => {
             try {
                 const parsed = JSON.parse(savedUser);
                 setUser(parsed);
-                saveAccountToList(parsed, token);
                 refreshProfile(); // Sync latest data (is_staff, etc)
             } catch {
                 localStorage.removeItem('user');
@@ -60,22 +59,12 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (credentials) => {
-        // Save current account before switching
-        const currentToken = localStorage.getItem('access_token');
-        const currentUser = localStorage.getItem('user');
-        if (currentToken && currentUser) {
-            try {
-                saveAccountToList(JSON.parse(currentUser), currentToken);
-            } catch { }
-        }
-
         const res = await loginUser(credentials);
         const { access, user: userData } = res.data;
         localStorage.setItem('access_token', access);
         const userObj = userData || { username: credentials.username };
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
-        saveAccountToList(userObj, access);
         return res;
     };
 
