@@ -27,10 +27,18 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://127.0.0.1:5000/predict")
 
 # Auth Views
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+class RegisterView(APIView):
     permission_classes = (permissions.AllowAny,)
-    serializer_class = UserSerializer
+
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                user = serializer.save()
+                return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Profile & Story Views
 class ProfileViewSet(viewsets.ModelViewSet):
