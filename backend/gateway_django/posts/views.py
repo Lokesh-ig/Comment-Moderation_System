@@ -320,6 +320,7 @@ def create_comment(request):
     if not scores:
         service_urls = [
             os.environ.get("AI_SERVICE_URL"),
+            "https://comment-moderationsystem-production.up.railway.app/predict",
             "http://comment-moderationsystem.railway.internal:5000/predict",
             "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
         ]
