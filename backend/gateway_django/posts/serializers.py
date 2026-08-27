@@ -240,10 +240,13 @@ class PostSerializer(serializers.ModelSerializer):
         from .moderation_utils import MODERATE_BAD_WORDS_PATTERN, SEVERE_BAD_WORDS_PATTERN
         clean_comments = []
         for c in allowed_comments:
-            if SEVERE_BAD_WORDS_PATTERN.search(c.text):
+            scores_list = [c.toxic, c.severe_toxic, c.obscene, c.threat, c.insult, c.identity_hate]
+            max_score = max(scores_list) if scores_list else 0.0
+            
+            if SEVERE_BAD_WORDS_PATTERN.search(c.text) or max_score >= 0.70:
                 c.status = 'deleted'
                 c.save(update_fields=['status'])
-            elif MODERATE_BAD_WORDS_PATTERN.search(c.text):
+            elif MODERATE_BAD_WORDS_PATTERN.search(c.text) or max_score >= 0.40:
                 c.status = 'flagged'
                 c.save(update_fields=['status'])
             else:
