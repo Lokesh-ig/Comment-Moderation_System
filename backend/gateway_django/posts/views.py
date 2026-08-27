@@ -345,11 +345,6 @@ def create_comment(request):
     if not scores or not isinstance(scores, dict):
         scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
 
-    # Safety protection: Ensure profane/toxic words are never approved
-    profane_keywords = ['bad', 'hate', 'stupid', 'idiot', 'ugly', 'trash', 'dumb', 'kill', 'die', 'abuse', 'bastard', 'bitch', 'asshole', 'fuck', 'shit', 'fucking']
-    if any(w in text.lower() for w in profane_keywords):
-        scores['toxic'] = max(float(scores.get('toxic', 0.0)), 0.85)
-
     toxic_score = float(scores.get("toxic", 0.0))
     status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
 
