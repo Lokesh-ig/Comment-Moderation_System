@@ -183,20 +183,11 @@ const PostCard = ({ post, onLike, onDelete }) => {
         }
     };
 
-    const handleCommentPosted = (newComment, replaceTempId = null) => {
-        setComments(prevComments => {
-            if (!newComment && replaceTempId) {
-                return prevComments.filter(c => c.id !== replaceTempId);
-            }
-            if (replaceTempId) {
-                const exists = prevComments.some(c => c.id === replaceTempId);
-                if (exists) {
-                    return prevComments.map(c => c.id === replaceTempId ? newComment : c);
-                }
-            }
-            return [...prevComments, newComment];
-        });
-        setReplyTo(null);
+    const handleCommentPosted = (newComment) => {
+        if (newComment && typeof newComment === 'object') {
+            setComments(prevComments => [...(Array.isArray(prevComments) ? prevComments : []), newComment]);
+        }
+        setReplyTo(null); // Clear reply state
     };
 
     const handleCommentDeleted = (commentId) => {

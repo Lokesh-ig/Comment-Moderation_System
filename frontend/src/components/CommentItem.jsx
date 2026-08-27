@@ -19,8 +19,8 @@ const formatTime = (dateStr) => {
 };
 
 const CommentItem = ({ comment, index = 0, onReply, onDelete }) => {
-    // If comment is flagged or deleted, do not render it or any guideline message
-    if (comment.status && comment.status !== 'allowed') {
+    // Safety check to prevent crashes if comment is null/undefined or flagged
+    if (!comment || (comment.status && comment.status !== 'allowed')) {
         return null;
     }
 

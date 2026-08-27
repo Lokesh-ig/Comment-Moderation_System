@@ -69,8 +69,9 @@ const CommentList = ({ comments = [], onReply, onDelete, loading = false }) => {
         );
     }
 
-    // Filter allowed comments only
-    const allowedComments = comments.filter(c => !c.status || c.status === 'allowed');
+    // Filter allowed comments only with null safety
+    const safeComments = Array.isArray(comments) ? comments.filter(c => c && typeof c === 'object') : [];
+    const allowedComments = safeComments.filter(c => !c.status || c.status === 'allowed');
 
     if (!allowedComments || allowedComments.length === 0) {
         return (
