@@ -83,6 +83,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 import os
 import socket
+import pymysql
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -95,10 +96,13 @@ if mysql_host and "${" in mysql_host:
 if db_url and "${" in db_url:
     db_url = None
 
+use_mysql = False
+mysql_config = {}
+
 if db_url and db_url.startswith('mysql'):
-    parsed = urlparse(db_url)
-    DATABASES = {
-        'default': {
+    try:
+        parsed = urlparse(db_url)
+        mysql_config = {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': parsed.path.lstrip('/') or 'railway',
             'USER': parsed.username or 'root',
@@ -107,11 +111,24 @@ if db_url and db_url.startswith('mysql'):
             'PORT': str(parsed.port or 3306),
             'OPTIONS': {'charset': 'utf8mb4'},
         }
-    }
-elif mysql_host:
+        conn = pymysql.connect(
+            host=parsed.hostname,
+            user=parsed.username or 'root',
+            password=parsed.password or '',
+            database=parsed.path.lstrip('/') or 'railway',
+            port=parsed.port or 3306,
+            connect_timeout=3
+        )
+        conn.close()
+        use_mysql = True
+    except Exception as e:
+        print(f"MySQL connection attempt failed: {e}. Falling back to SQLite.")
+        use_mysql = False
+
+if not use_mysql and mysql_host:
     port = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT') or '3306'
-    DATABASES = {
-        'default': {
+    try:
+        mysql_config = {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': os.environ.get('MYSQL_NAME') or os.environ.get('MYSQLDATABASE') or 'railway',
             'USER': os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER') or 'root',
@@ -120,7 +137,22 @@ elif mysql_host:
             'PORT': str(port),
             'OPTIONS': {'charset': 'utf8mb4'},
         }
-    }
+        conn = pymysql.connect(
+            host=mysql_host,
+            user=os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER') or 'root',
+            password=os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD') or '',
+            database=os.environ.get('MYSQL_NAME') or os.environ.get('MYSQLDATABASE') or 'railway',
+            port=int(port),
+            connect_timeout=3
+        )
+        conn.close()
+        use_mysql = True
+    except Exception as e:
+        print(f"MySQL connection attempt failed: {e}. Falling back to SQLite.")
+        use_mysql = False
+
+if use_mysql:
+    DATABASES = {'default': mysql_config}
 else:
     DATABASES = {
         'default': {
