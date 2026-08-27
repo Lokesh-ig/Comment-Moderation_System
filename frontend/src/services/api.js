@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://chic-amazement-production-6e06.up.railway.app/api',
 });
 
 // Attach JWT token to every request
