@@ -84,6 +84,10 @@ import os
 
 mysql_host = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST')
 
+# Prevent crash if literal unexpanded Railway template syntax (${...}) was pasted
+if mysql_host and ("${" in mysql_host or "RAILWAY" in mysql_host and not "." in mysql_host):
+    mysql_host = None
+
 if mysql_host:
     DATABASES = {
         'default': {
