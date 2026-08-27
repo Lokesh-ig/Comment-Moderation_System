@@ -80,15 +80,31 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-import os
+from urllib.parse import urlparse
 
+db_url = os.environ.get('MYSQL_URL') or os.environ.get('MYSQL_PRIVATE_URL') or os.environ.get('DATABASE_URL')
 mysql_host = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST')
 
 # Prevent crash if literal unexpanded Railway template syntax (${...}) was pasted
 if mysql_host and ("${" in mysql_host or "RAILWAY" in mysql_host and not "." in mysql_host):
     mysql_host = None
 
-if mysql_host:
+if db_url and db_url.startswith('mysql') and not "${" in db_url:
+    parsed = urlparse(db_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': parsed.path.lstrip('/') or 'railway',
+            'USER': parsed.username or 'root',
+            'PASSWORD': parsed.password or '',
+            'HOST': parsed.hostname,
+            'PORT': str(parsed.port or 3306),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
+elif mysql_host:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
