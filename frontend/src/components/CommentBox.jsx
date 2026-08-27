@@ -136,6 +136,24 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
                     {replyTo ? 'Reply' : 'Post'}
                 </button>
             </form>
+
+            {result && (
+                <div className={`text-xs font-semibold px-3.5 py-2 rounded-xl flex items-center gap-2 animate-fade-in ${
+                    result.status === 'allowed'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                        : result.status === 'flagged'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                        : 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+                }`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
+                    <span>
+                        {result.status === 'allowed' && 'Comment posted!'}
+                        {result.status === 'flagged' && 'Comment submitted for moderation review'}
+                        {result.status === 'deleted' && 'Comment removed due to content policy'}
+                        {result.status === 'error' && (result.message || 'Failed to post comment')}
+                    </span>
+                </div>
+            )}
         </div>
     );
 };

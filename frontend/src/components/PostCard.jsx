@@ -184,10 +184,11 @@ const PostCard = ({ post, onLike, onDelete }) => {
     };
 
     const handleCommentPosted = (newComment) => {
+        setShowComments(true);
         if (newComment && typeof newComment === 'object') {
-            setComments(prevComments => [...(Array.isArray(prevComments) ? prevComments : []), newComment]);
+            setComments(prevComments => [newComment, ...(Array.isArray(prevComments) ? prevComments : [])]);
         }
-        setReplyTo(null); // Clear reply state
+        setReplyTo(null);
     };
 
     const handleCommentDeleted = (commentId) => {
