@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h3>Audio Test</h3>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <br><br>
+    <audio id="player" controls></audio>
+    <br><br>
+    <a id="download">Download</a>
+
+    <script>
+        let mediaRecorder;
+        let chunks = [];
+        const startBtn = document.getElementById('start');
+        const stopBtn = document.getElementById('stop');
+        const player = document.getElementById('player');
+        const downloadLink = document.getElementById('download');
+
+        startBtn.onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            let options = {};
+            if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                options = { mimeType: 'audio/mp4' };
+            } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                options = { mimeType: 'audio/webm;codecs=opus' };
+            } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                options = { mimeType: 'audio/webm' };
+            }
+
+            mediaRecorder = new MediaRecorder(stream, options);
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const mimeType = mediaRecorder.mimeType || options.mimeType || 'audio/webm';
+                const blob = new Blob(chunks, { type: mimeType });
+
+                const url = URL.createObjectURL(blob);
+                player.src = url;
+                downloadLink.href = url;
+
+                let ext = 'webm';
+                if (mimeType.includes('mp4')) ext = 'mp4';
+                else if (mimeType.includes('mpeg')) ext = 'mp3';
+                else if (mimeType.includes('ogg')) ext = 'ogg';
+                else if (mimeType.includes('wav')) ext = 'wav';
+
+                downloadLink.download = `test_audio.${ext}`;
+                downloadLink.innerHTML = `Download ${mimeType}`;
+
+                chunks = [];
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+        };
+
+        stopBtn.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+        };
+    </script>
+</body>
+
+</html>

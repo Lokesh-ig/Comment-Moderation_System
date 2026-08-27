@@ -1,0 +1,34 @@
+# Python / Django / Flask
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+db.sqlite3
+media/
+*.log
+check_log.txt
+eval_output.txt
+
+# Large Dataset Files (If hosting dataset separately)
+backend/*.csv
+
+# Saved ML Models (Upload to Hugging Face or Release assets instead of Git)
+backend/ai_service_flask/saved_model/
+
+# Node / React
+node_modules/
+dist/
+.env
+.env.local
+
+# IDE & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
