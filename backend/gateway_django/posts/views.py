@@ -317,20 +317,21 @@ def create_comment(request):
             url = AI_SERVICE_URL if ("/call/predict" in AI_SERVICE_URL or "/api/predict" in AI_SERVICE_URL) else f"{AI_SERVICE_URL.rstrip('/')}/api/predict"
             response = requests.post(url, json={"data": [text]}, timeout=10)
             res_json = response.json()
-            scores = res_json.get("data", [{}])[0] if isinstance(res_json.get("data"), list) and len(res_json.get("data")) > 0 else res_json
+            if isinstance(res_json, dict):
+                data = res_json.get("data", [])
+                if isinstance(data, list) and len(data) > 0:
+                    scores = data[0] if isinstance(data[0], dict) else res_json
+                else:
+                    scores = res_json
+            else:
+                scores = {}
         else:
             response = requests.post(AI_SERVICE_URL, json={"text": text}, timeout=10)
             scores = response.json()
-    except Exception:
+    except Exception as e:
         scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
 
-    # Double-layer check: Keyword toxic filter fallback
-    profane_keywords = ['bad', 'hate', 'stupid', 'idiot', 'ugly', 'trash', 'dumb', 'kill', 'die', 'abuse', 'bastard', 'bitch', 'asshole', 'fuck', 'shit', 'fucking']
-    if any(w in text.lower() for w in profane_keywords):
-        if scores.get("toxic", 0.0) < 0.5:
-            scores["toxic"] = 0.85
-
-    toxic_score = scores.get("toxic", 0.0)
+    toxic_score = float(scores.get("toxic", 0.0))
     status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
 
     comment = Comment.objects.create(
