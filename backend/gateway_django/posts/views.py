@@ -154,7 +154,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         if caption:
             try:
                 # Use AI_SERVICE_URL relative to where it's defined (usually at top of views.py)
-                response = requests.post(AI_SERVICE_URL, json={"text": caption}, timeout=5)
+                response = requests.post(AI_SERVICE_URL, json={"text": caption}, timeout=1.8)
                 if response.status_code == 200:
                     scores = response.json()
                     toxic_score = scores.get("toxic", 0.0)
@@ -319,24 +319,24 @@ def create_comment(request):
     from .ai_loader import get_direct_prediction
     scores = get_direct_prediction(text)
     
-    # 2. Fallback to HTTP endpoints with fast 1.5s timeout
+    # 2. Fallback to HTTP endpoints if direct prediction unavailable
     if not scores:
-        urls_to_try = []
-        ai_env = os.environ.get("AI_SERVICE_URL")
-        if ai_env:
-            urls_to_try.append(ai_env)
-        urls_to_try.extend([
+        raw_urls = [
+            os.environ.get("AI_SERVICE_URL"),
             "https://comment-moderationsystem-production.up.railway.app/predict",
-            "http://comment-moderationsystem.railway.internal:5000/predict"
-        ])
-        
-        for url in urls_to_try:
-            if not url:
-                continue
+            "http://comment-moderationsystem.railway.internal:5000/predict",
+            "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
+        ]
+        service_urls = []
+        for u in raw_urls:
+            if u and u not in service_urls:
+                service_urls.append(u)
+
+        for url in service_urls:
             try:
                 if "hf.space" in url:
                     target_url = url if ("/call/predict" in url or "/api/predict" in url) else f"{url.rstrip('/')}/api/predict"
-                    resp = requests.post(target_url, json={"data": [text]}, timeout=1.5)
+                    resp = requests.post(target_url, json={"data": [text]}, timeout=1.8)
                     res_json = resp.json()
                     if isinstance(res_json, dict):
                         data = res_json.get("data", [])
@@ -353,8 +353,9 @@ def create_comment(request):
             except Exception:
                 continue
 
-    if not scores or not isinstance(scores, dict):
-        scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
+    if not scores or not isinstance(scores, dict) or "toxic" not in scores:
+        from .moderation_utils import fallback_moderate
+        _, scores = fallback_moderate(text)
 
     toxic_score = float(scores.get("toxic", 0.0))
     status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
