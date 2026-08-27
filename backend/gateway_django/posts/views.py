@@ -305,8 +305,14 @@ def create_comment(request):
             return Response({"error": "Parent comment not found"}, status=status.HTTP_404_NOT_FOUND)
 
     try:
-        response = requests.post(AI_SERVICE_URL, json={"text": text}, timeout=5)
-        scores = response.json()
+        if "hf.space" in AI_SERVICE_URL:
+            url = AI_SERVICE_URL if ("/call/predict" in AI_SERVICE_URL or "/api/predict" in AI_SERVICE_URL) else f"{AI_SERVICE_URL.rstrip('/')}/api/predict"
+            response = requests.post(url, json={"data": [text]}, timeout=10)
+            res_json = response.json()
+            scores = res_json.get("data", [{}])[0] if isinstance(res_json.get("data"), list) and len(res_json.get("data")) > 0 else res_json
+        else:
+            response = requests.post(AI_SERVICE_URL, json={"text": text}, timeout=10)
+            scores = response.json()
     except Exception:
         scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
 
