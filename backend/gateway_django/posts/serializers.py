@@ -211,7 +211,10 @@ class PostSerializer(serializers.ModelSerializer):
             'music_title', 'music_artist', 'music_url', 'music_coverart', 
             'music_start_time', 'music_duration'
         ]
-        extra_kwargs = {'author': {'read_only': True}}
+        extra_kwargs = {
+            'author': {'read_only': True},
+            'image': {'required': False, 'allow_null': True}
+        }
 
     def get_likes_count(self, obj):
         return obj.likes.count()
