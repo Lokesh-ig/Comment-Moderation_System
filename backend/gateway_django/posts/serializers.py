@@ -193,6 +193,7 @@ class LoginActivitySerializer(serializers.ModelSerializer):
         fields = ['id', 'ip_address', 'user_agent', 'event_type', 'timestamp']
 
 class PostSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False, allow_null=True)
     author_username = serializers.ReadOnlyField(source='author.username')
     author_avatar_url = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
