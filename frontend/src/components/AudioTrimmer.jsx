@@ -300,161 +300,166 @@ const AudioTrimmer = ({ track, initialStartTime = 0, initialDuration = 15, onCon
     };
 
     return (
-    return (
-        <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-2xl flex flex-col overflow-y-auto no-scrollbar z-[100] animate-slide-up border border-gray-100 dark:border-gray-800 shadow-2xl">
-            <div className="p-4 sm:p-5 flex flex-col h-full justify-between gap-3 sm:gap-4">
-                {/* Header */}
-                <div className="flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
-                            <FiMusic size={20} />
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[200] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+            <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-scale-in">
+                <div className="p-4 sm:p-6 flex flex-col h-full overflow-y-auto no-scrollbar gap-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 shrink-0">
+                                <FiMusic size={22} />
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white leading-tight truncate">{track.trackName}</h3>
+                                <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{track.artistName}</p>
+                            </div>
                         </div>
-                        <div className="min-w-0">
-                            <h3 className="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white leading-tight truncate">{track.trackName}</h3>
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{track.artistName}</p>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={onCancel}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors shrink-0"
-                    >
-                        <FiX size={18} />
-                    </button>
-                </div>
-
-                <audio
-                    key={track.previewUrl}
-                    ref={audioRef}
-                    src={track.previewUrl}
-                    onCanPlayThrough={handleAudioReady}
-                    onTimeUpdate={handleTimeUpdate}
-                    onSeeking={() => { isInternalSeekingRef.current = true; }}
-                    onSeeked={() => { setTimeout(() => { isInternalSeekingRef.current = false; }, 50); }}
-                    onEnded={() => setIsPlaying(false)}
-                    preload="auto"
-                />
-
-                {/* Duration Slider */}
-                <div className="flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                            Clip Length <span className="text-[10px] text-gray-400 dark:text-gray-500">(5s - 30s)</span>
-                        </span>
-                        <span className="text-xs font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full">{duration}s</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="5"
-                        max="60"
-                        step="1"
-                        value={duration}
-                        onChange={handleDurationChange}
-                        className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-500"
-                    />
-                </div>
-
-                {/* Draggable Waveform Area */}
-                <div className="flex flex-col gap-2 relative shrink-0">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Select Part & Playhead</span>
-                        <div className="flex items-center gap-1.5">
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); adjustStartTime(-1); }}
-                                className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors font-bold text-xs"
-                                title="-1 second"
-                            >
-                                -1s
-                            </button>
-                            <span className="text-xs font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full min-w-[90px] text-center">
-                                {formatTime(startTime)} - {formatTime(startTime + duration)}
-                            </span>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); adjustStartTime(1); }}
-                                className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors font-bold text-xs"
-                                title="+1 second"
-                            >
-                                +1s
-                            </button>
-                        </div>
-                    </div>
-
-                    <div 
-                        ref={waveformRef}
-                        onMouseDown={handleMouseDown}
-                        onTouchStart={handleMouseDown}
-                        className="relative h-24 bg-gray-50 dark:bg-gray-800/80 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700/80 p-2 cursor-pointer shadow-inner touch-none"
-                    >
-                        {/* Waveform Visualization */}
-                        <div className="absolute inset-x-2 top-2 bottom-2 flex items-center justify-between opacity-50 pointer-events-none">
-                            {waveform.map((height, i) => (
-                                <div key={i} className="w-[.8%] bg-indigo-300 dark:bg-indigo-500/40 rounded-full" style={{ height: `${height * 100}%` }} />
-                            ))}
-                        </div>
-
-                        {/* Selected Window */}
-                        <div
-                            className="absolute inset-y-2 bg-indigo-500/10 backdrop-blur-[1px] border-y-2 border-indigo-500/30 transition-all pointer-events-none z-10"
-                            style={{
-                                left: `${(startTime / maxDuration) * 100}%`,
-                                width: `${(duration / maxDuration) * 100}%`
-                            }}
+                        <button 
+                            type="button"
+                            onClick={onCancel}
+                            className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors shrink-0"
                         >
-                            <div className="absolute inset-y-0 left-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                            <div className="absolute inset-y-0 right-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                            <FiX size={20} />
+                        </button>
+                    </div>
+
+                    <audio
+                        key={track.previewUrl}
+                        ref={audioRef}
+                        src={track.previewUrl}
+                        onCanPlayThrough={handleAudioReady}
+                        onTimeUpdate={handleTimeUpdate}
+                        onSeeking={() => { isInternalSeekingRef.current = true; }}
+                        onSeeked={() => { setTimeout(() => { isInternalSeekingRef.current = false; }, 50); }}
+                        onEnded={() => setIsPlaying(false)}
+                        preload="auto"
+                    />
+
+                    {/* Duration Slider */}
+                    <div className="flex flex-col gap-2 shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                                Clip Length <span className="text-[10px] text-gray-400 dark:text-gray-500">(5s - 30s)</span>
+                            </span>
+                            <span className="text-sm font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">{duration}s</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="5"
+                            max="60"
+                            step="1"
+                            value={duration}
+                            onChange={handleDurationChange}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-500"
+                        />
+                    </div>
+
+                    {/* Draggable Waveform Area */}
+                    <div className="flex flex-col gap-2 relative shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Select Part & Playhead</span>
+                            <div className="flex items-center gap-1.5">
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); adjustStartTime(-1); }}
+                                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors font-bold text-xs"
+                                    title="-1 second"
+                                >
+                                    -1s
+                                </button>
+                                <span className="text-xs font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full min-w-[95px] text-center">
+                                    {formatTime(startTime)} - {formatTime(startTime + duration)}
+                                </span>
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); adjustStartTime(1); }}
+                                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors font-bold text-xs"
+                                    title="+1 second"
+                                >
+                                    +1s
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Draggable Playhead */}
-                        {isReady && (
+                        <div 
+                            ref={waveformRef}
+                            onMouseDown={handleMouseDown}
+                            onTouchStart={handleMouseDown}
+                            className="relative h-28 sm:h-32 bg-gray-50 dark:bg-gray-800/80 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/80 p-2 cursor-pointer shadow-inner touch-none"
+                        >
+                            {/* Waveform Visualization */}
+                            <div className="absolute inset-x-2 top-2 bottom-2 flex items-center justify-between opacity-50 pointer-events-none">
+                                {waveform.map((height, i) => (
+                                    <div key={i} className="w-[.8%] bg-indigo-300 dark:bg-indigo-500/40 rounded-full" style={{ height: `${height * 100}%` }} />
+                                ))}
+                            </div>
+
+                            {/* Selected Window */}
                             <div
-                                className="absolute top-2 bottom-2 w-[2px] bg-white z-20 shadow-[0_0_10px_rgba(255,255,255,0.8)] pointer-events-none"
-                                style={{ 
-                                    left: `${(virtualCurrentTime / maxDuration) * 100}%`,
-                                    transition: (isDragging || isScrubbing) ? 'none' : 'left 0.08s linear',
-                                    opacity: isPlaying || isDragging || isScrubbing ? 1 : 0.6
+                                className="absolute inset-y-2 bg-indigo-500/10 backdrop-blur-[1px] border-y-2 border-indigo-500/30 transition-all pointer-events-none z-10"
+                                style={{
+                                    left: `${(startTime / maxDuration) * 100}%`,
+                                    width: `${(duration / maxDuration) * 100}%`
                                 }}
                             >
-                                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-white rounded-full border-2 border-indigo-500 shadow-lg flex items-center justify-center">
-                                    <div className="w-1 h-1 bg-indigo-500 rounded-full" />
-                                </div>
+                                <div className="absolute inset-y-0 left-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                                <div className="absolute inset-y-0 right-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                             </div>
-                        )}
-                        
-                        {!isReady && (
-                            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-[2px] z-30 flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-1.5">
-                                    <div className="w-6 h-6 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Loading Audio...</span>
-                                </div>
-                            </div>
-                        )}
 
-                        <div className="absolute bottom-2 left-2 text-[9px] uppercase font-bold text-gray-400 bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 rounded-md pointer-events-none z-20 border border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
-                            {isReady ? (
-                                <>
-                                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-                                    <span>Timeline ({formatTime(maxDuration)})</span>
-                                </>
-                            ) : 'Initializing Reader...'}
+                            {/* Draggable Playhead */}
+                            {isReady && (
+                                <div
+                                    className="absolute top-2 bottom-2 w-[2px] bg-white z-20 shadow-[0_0_10px_rgba(255,255,255,0.8)] pointer-events-none"
+                                    style={{ 
+                                        left: `${(virtualCurrentTime / maxDuration) * 100}%`,
+                                        transition: (isDragging || isScrubbing) ? 'none' : 'left 0.08s linear',
+                                        opacity: isPlaying || isDragging || isScrubbing ? 1 : 0.6
+                                    }}
+                                >
+                                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full border-2 border-indigo-500 shadow-lg flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {!isReady && (
+                                <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-[2px] z-30 flex items-center justify-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Loading Audio...</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="absolute bottom-2.5 left-2.5 text-[9px] uppercase font-bold text-gray-400 bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 rounded-md pointer-events-none z-20 border border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
+                                {isReady ? (
+                                    <>
+                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                                        <span>Timeline ({formatTime(maxDuration)})</span>
+                                    </>
+                                ) : 'Initializing Reader...'}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer Controls */}
-                <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-3 shrink-0">
-                    <button
-                        type="button"
-                        onClick={togglePlay}
-                        className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm shrink-0"
-                    >
-                        {isPlaying ? <FiPause size={24} /> : <FiPlay className="ml-0.5" size={24} />}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onConfirm(startTime, duration)}
-                        className="flex-1 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-500/25 hover:opacity-90 transition-all flex items-center justify-center gap-2 active:scale-98"
-                    >
-                        <FiCheck size={20} /> Confirm Selection
-                    </button>
+                    {/* Footer Controls */}
+                    <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center gap-3 shrink-0">
+                        <button
+                            type="button"
+                            onClick={togglePlay}
+                            className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm shrink-0"
+                        >
+                            {isPlaying ? <FiPause size={26} /> : <FiPlay className="ml-0.5" size={26} />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onConfirm(startTime, duration)}
+                            className="flex-1 h-13 sm:h-14 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-extrabold text-base sm:text-lg shadow-lg shadow-indigo-500/25 hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                            <FiCheck size={22} /> Confirm Selection
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

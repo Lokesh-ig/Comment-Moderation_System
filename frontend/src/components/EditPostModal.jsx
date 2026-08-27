@@ -160,15 +160,13 @@ const EditPostModal = ({ post, onClose, onUpdate }) => {
                                     </div>
                                 )}
                                 {showTrimmer && music?.rawTrack && (
-                                    <div className="relative h-[480px] min-h-[460px] border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-inner">
-                                        <AudioTrimmer
-                                            track={music.rawTrack}
-                                            initialStartTime={trimStartTime}
-                                            initialDuration={musicDuration}
-                                            onConfirm={handleTrimConfirm}
-                                            onCancel={() => setShowTrimmer(false)}
-                                        />
-                                    </div>
+                                    <AudioTrimmer
+                                        track={music.rawTrack}
+                                        initialStartTime={trimStartTime}
+                                        initialDuration={musicDuration}
+                                        onConfirm={handleTrimConfirm}
+                                        onCancel={() => setShowTrimmer(false)}
+                                    />
                                 )}
                             </div>
                         )}
