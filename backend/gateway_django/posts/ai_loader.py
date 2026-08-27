@@ -23,12 +23,18 @@ def load_ai_model():
     global tokenizer, model
     if tokenizer is None or model is None:
         try:
-            tokenizer = AutoTokenizer.from_pretrained(HF_MODEL_NAME)
-            model = AutoModelForSequenceClassification.from_pretrained(HF_MODEL_NAME)
+            tokenizer = AutoTokenizer.from_pretrained(HF_MODEL_NAME, subfolder="saved_model")
+            model = AutoModelForSequenceClassification.from_pretrained(HF_MODEL_NAME, subfolder="saved_model")
             model.to(device)
             model.eval()
         except Exception as e:
-            print(f"Error loading AI model in Django: {e}")
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(HF_MODEL_NAME)
+                model = AutoModelForSequenceClassification.from_pretrained(HF_MODEL_NAME)
+                model.to(device)
+                model.eval()
+            except Exception as e2:
+                print(f"Error loading AI model in Django: {e2}")
 
 def get_direct_prediction(text):
     try:
