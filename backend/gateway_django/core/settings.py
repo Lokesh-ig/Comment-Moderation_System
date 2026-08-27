@@ -82,15 +82,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 import os
 
-if os.environ.get('MYSQL_HOST'):
+mysql_host = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST')
+
+if mysql_host:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('MYSQL_NAME', 'insta_ai_db'),
-            'USER': os.environ.get('MYSQL_USER', 'root'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'project25@'),
-            'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
-            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'NAME': os.environ.get('MYSQL_NAME') or os.environ.get('MYSQLDATABASE') or 'insta_ai_db',
+            'USER': os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER') or 'root',
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD') or '',
+            'HOST': mysql_host,
+            'PORT': os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT') or '3306',
             'OPTIONS': {
                 'charset': 'utf8mb4',
             },
