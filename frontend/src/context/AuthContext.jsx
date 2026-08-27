@@ -113,6 +113,11 @@ export const AuthProvider = ({ children }) => {
             if (token) saveAccountToList(mergedUser, token);
         } catch (err) {
             console.error('Failed to refresh profile', err);
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user');
+                setUser(null);
+            }
         }
     };
 
