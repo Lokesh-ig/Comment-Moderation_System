@@ -12,6 +12,7 @@ from .serializers import (
 )
 import requests
 import os
+from .moderation_utils import fallback_moderate, BAD_WORDS_PATTERN, SEVERE_WORDS_PATTERN
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):

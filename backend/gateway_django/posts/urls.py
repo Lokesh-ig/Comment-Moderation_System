@@ -34,6 +34,7 @@ urlpatterns = [
     path("notifications/mark-all-read/", mark_all_notifications_read, name="mark-all-read"),
     path("search/", UserSearchView.as_view(), name="search-users"),
     path("comment/", create_comment, name="create-comment"),
+    path("comments/create/", create_comment, name="create-comment-alias"),
     path("comment/<int:pk>/like/", toggle_comment_like, name="toggle-comment-like"),
     path("comment/<int:pk>/delete/", delete_own_comment, name="delete-own-comment"),
     path('allowed-comments/', get_allowed_comments, name='allowed-comments'),
