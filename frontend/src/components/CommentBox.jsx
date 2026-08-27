@@ -136,8 +136,6 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
                     {replyTo ? 'Reply' : 'Post'}
                 </button>
             </form>
-
-            {result && getBadge()}
         </div>
     );
 };
