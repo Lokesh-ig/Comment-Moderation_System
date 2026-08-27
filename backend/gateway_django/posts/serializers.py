@@ -237,10 +237,13 @@ class PostSerializer(serializers.ModelSerializer):
     
     def get_comments(self, obj):
         allowed_comments = obj.comments.filter(status='allowed').order_by('-created_at')
-        from .moderation_utils import BAD_WORDS_PATTERN, SEVERE_WORDS_PATTERN
+        from .moderation_utils import MODERATE_BAD_WORDS_PATTERN, SEVERE_BAD_WORDS_PATTERN
         clean_comments = []
         for c in allowed_comments:
-            if SEVERE_WORDS_PATTERN.search(c.text) or BAD_WORDS_PATTERN.search(c.text):
+            if SEVERE_BAD_WORDS_PATTERN.search(c.text):
+                c.status = 'deleted'
+                c.save(update_fields=['status'])
+            elif MODERATE_BAD_WORDS_PATTERN.search(c.text):
                 c.status = 'flagged'
                 c.save(update_fields=['status'])
             else:

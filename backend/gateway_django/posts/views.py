@@ -12,7 +12,7 @@ from .serializers import (
 )
 import requests
 import os
-from .moderation_utils import fallback_moderate, BAD_WORDS_PATTERN, SEVERE_WORDS_PATTERN
+from .moderation_utils import fallback_moderate, MODERATE_BAD_WORDS_PATTERN, SEVERE_BAD_WORDS_PATTERN
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -367,7 +367,9 @@ def create_comment(request):
         ]
         max_score = max(scores_list)
         
-        if fallback_status == "flagged" or max_score >= 0.4:
+        if fallback_status == "deleted" or max_score >= 0.7:
+            status_val = "deleted"
+        elif fallback_status == "flagged" or max_score >= 0.4:
             status_val = "flagged"
         else:
             status_val = "allowed"
