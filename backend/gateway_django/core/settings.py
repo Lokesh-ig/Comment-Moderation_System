@@ -89,56 +89,39 @@ from urllib.parse import urlparse
 db_url = os.environ.get('MYSQL_URL') or os.environ.get('MYSQL_PRIVATE_URL') or os.environ.get('DATABASE_URL')
 mysql_host = os.environ.get('MYSQL_HOST') or os.environ.get('MYSQLHOST')
 
-# Prevent crash if literal unexpanded Railway template syntax (${...}) was pasted
-if mysql_host and ("${" in mysql_host or "RAILWAY" in mysql_host and not "." in mysql_host):
+# Clean up literal unexpanded Railway template syntax (${...})
+if mysql_host and "${" in mysql_host:
     mysql_host = None
+if db_url and "${" in db_url:
+    db_url = None
 
-def is_host_reachable(host, port=3306, timeout=2):
-    try:
-        sock = socket.create_connection((host, int(port)), timeout=timeout)
-        sock.close()
-        return True
-    except Exception:
-        return False
-
-use_mysql = False
-
-if db_url and db_url.startswith('mysql') and not "${" in db_url:
-    try:
-        parsed = urlparse(db_url)
-        if parsed.hostname and is_host_reachable(parsed.hostname, parsed.port or 3306):
-            use_mysql = True
-            DATABASES = {
-                'default': {
-                    'ENGINE': 'django.db.backends.mysql',
-                    'NAME': parsed.path.lstrip('/') or 'railway',
-                    'USER': parsed.username or 'root',
-                    'PASSWORD': parsed.password or '',
-                    'HOST': parsed.hostname,
-                    'PORT': str(parsed.port or 3306),
-                    'OPTIONS': {'charset': 'utf8mb4'},
-                }
-            }
-    except Exception:
-        pass
-
-if not use_mysql and mysql_host:
-    port = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT') or '3306'
-    if is_host_reachable(mysql_host, port):
-        use_mysql = True
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': os.environ.get('MYSQL_NAME') or os.environ.get('MYSQLDATABASE') or 'insta_ai_db',
-                'USER': os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER') or 'root',
-                'PASSWORD': os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD') or '',
-                'HOST': mysql_host,
-                'PORT': str(port),
-                'OPTIONS': {'charset': 'utf8mb4'},
-            }
+if db_url and db_url.startswith('mysql'):
+    parsed = urlparse(db_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': parsed.path.lstrip('/') or 'railway',
+            'USER': parsed.username or 'root',
+            'PASSWORD': parsed.password or '',
+            'HOST': parsed.hostname,
+            'PORT': str(parsed.port or 3306),
+            'OPTIONS': {'charset': 'utf8mb4'},
         }
-
-if not use_mysql:
+    }
+elif mysql_host:
+    port = os.environ.get('MYSQL_PORT') or os.environ.get('MYSQLPORT') or '3306'
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQL_NAME') or os.environ.get('MYSQLDATABASE') or 'railway',
+            'USER': os.environ.get('MYSQL_USER') or os.environ.get('MYSQLUSER') or 'root',
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD') or os.environ.get('MYSQLPASSWORD') or '',
+            'HOST': mysql_host,
+            'PORT': str(port),
+            'OPTIONS': {'charset': 'utf8mb4'},
+        }
+    }
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
