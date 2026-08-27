@@ -264,7 +264,7 @@ const CreatePost = ({ onPostCreated, onClose }) => {
                 )}
 
                 {showTrimmer && music?.rawTrack && (
-                    <div className="relative h-[350px] mt-4 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+                    <div className="relative h-[480px] min-h-[460px] mt-4 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
                         <AudioTrimmer
                             track={music.rawTrack}
                             initialStartTime={trimStartTime}
