@@ -65,6 +65,7 @@ export const AuthProvider = ({ children }) => {
         const userObj = userData || { username: credentials.username };
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
+        saveAccountToList(userObj, access);
         return res;
     };
 
@@ -74,11 +75,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        const currentUser = user?.username;
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         setUser(null);
-        if (currentUser) removeAccountFromList(currentUser);
     };
 
     const switchAccount = async (account) => {
