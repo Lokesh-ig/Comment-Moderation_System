@@ -41,10 +41,16 @@ const Register = () => {
         } catch (err) {
             const data = err.response?.data;
             if (data) {
-                const messages = Object.values(data).flat().join(', ');
-                setError(messages || 'Registration failed');
+                if (typeof data === 'object') {
+                    const messages = Object.entries(data)
+                        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                        .join(' | ');
+                    setError(messages || 'Registration failed');
+                } else {
+                    setError(String(data));
+                }
             } else {
-                setError('Registration failed. Please try again.');
+                setError('Network error: Unable to connect to backend server');
             }
         } finally {
             setLoading(false);
