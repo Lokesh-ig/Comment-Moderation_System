@@ -367,9 +367,7 @@ def create_comment(request):
         ]
         max_score = max(scores_list)
         
-        if fallback_status == "deleted" or max_score >= 0.7:
-            status_val = "deleted"
-        elif fallback_status == "flagged" or max_score >= 0.4:
+        if fallback_status == "flagged" or max_score >= 0.4:
             status_val = "flagged"
         else:
             status_val = "allowed"

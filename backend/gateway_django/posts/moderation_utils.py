@@ -25,18 +25,12 @@ def fallback_moderate(text):
         "identity_hate": 0.0
     }
     
-    if BAD_WORDS_PATTERN.search(text):
-        scores["toxic"] = 0.5
-        scores["insult"] = 0.5
-        scores["obscene"] = 0.5
+    if BAD_WORDS_PATTERN.search(text) or SEVERE_WORDS_PATTERN.search(text):
+        scores["toxic"] = 0.6
+        scores["insult"] = 0.6
+        scores["obscene"] = 0.6
         status = "flagged"
     else:
         status = "allowed"
-        
-    if SEVERE_WORDS_PATTERN.search(text):
-        scores["toxic"] = 0.9
-        scores["severe_toxic"] = 0.8
-        scores["threat"] = 0.8
-        status = "deleted"
         
     return status, scores

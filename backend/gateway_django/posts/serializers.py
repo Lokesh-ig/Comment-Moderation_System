@@ -240,10 +240,7 @@ class PostSerializer(serializers.ModelSerializer):
         from .moderation_utils import BAD_WORDS_PATTERN, SEVERE_WORDS_PATTERN
         clean_comments = []
         for c in allowed_comments:
-            if SEVERE_WORDS_PATTERN.search(c.text):
-                c.status = 'deleted'
-                c.save(update_fields=['status'])
-            elif BAD_WORDS_PATTERN.search(c.text):
+            if SEVERE_WORDS_PATTERN.search(c.text) or BAD_WORDS_PATTERN.search(c.text):
                 c.status = 'flagged'
                 c.save(update_fields=['status'])
             else:
