@@ -32,35 +32,12 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
         e.preventDefault();
         if (!text.trim() || !postId) return;
 
-        const commentText = text.trim();
-        const tempId = 'temp-' + Date.now();
-        
-        // Optimistic Comment Object for 0ms instant display
-        const tempComment = {
-            id: tempId,
-            text: commentText,
-            author_username: user?.username || 'You',
-            author_avatar_url: user?.avatar_url,
-            created_at: new Date().toISOString(),
-            status: 'allowed',
-            is_optimistic: true,
-        };
-
-        // Instantly clear input box & render comment
-        setText('');
         setLoading(true);
         setResult(null);
 
-        if (onCommentPosted) {
-            onCommentPosted(tempComment);
-        }
-        if (onCancelReply) {
-            onCancelReply();
-        }
-
         try {
             const res = await postComment({
-                text: commentText,
+                text: text.trim(),
                 post_id: postId,
                 parent_id: replyTo?.id
             });
@@ -68,21 +45,21 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
 
             const status = data.status || data.moderation_result || 'allowed';
             setResult({ status, message: data.message || '' });
+            setText('');
 
-            if (onCommentPosted && data.comment) {
-                // Replace optimistic comment with saved server comment
-                onCommentPosted(data.comment, tempId);
-            } else if (status !== 'allowed' && onCommentPosted) {
-                // Revert/Remove optimistic comment if flagged or deleted by AI
-                onCommentPosted(null, tempId);
+            // Only add approved comments to the visible list
+            if (status === 'allowed' && onCommentPosted && data.comment) {
+                onCommentPosted(data.comment);
             }
 
-            // Auto-hide result badge after 4 seconds
+            if (onCancelReply) {
+                onCancelReply();
+
+            }
+
+            // Auto-hide result after 4 seconds
             setTimeout(() => setResult(null), 4000);
         } catch (err) {
-            if (onCommentPosted) {
-                onCommentPosted(null, tempId);
-            }
             setResult({
                 status: 'error',
                 message: err.response?.data?.message || err.response?.data?.error || 'Failed to post comment',
@@ -91,62 +68,6 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const getBadge = () => {
-        if (!result) return null;
-
-        const badges = {
-            allowed: {
-                bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
-                text: 'text-emerald-700 dark:text-emerald-300',
-                icon: (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                ),
-                label: 'Comment Approved',
-            },
-            flagged: {
-                bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
-                text: 'text-amber-700 dark:text-amber-300',
-                icon: (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                ),
-                label: 'Comment Flagged for Review',
-            },
-            deleted: {
-                bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800',
-                text: 'text-red-700 dark:text-red-300',
-                icon: (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                ),
-                label: 'Comment Deleted',
-            },
-            error: {
-                bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800',
-                text: 'text-red-700 dark:text-red-300',
-                icon: (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01" />
-                    </svg>
-                ),
-                label: result.message || 'Something went wrong',
-            },
-        };
-
-        const badge = badges[result.status] || badges.allowed;
-
-        return (
-            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border ${badge.bg} ${badge.text} animate-slide-down`}>
-                {badge.icon}
-                <span className="text-sm font-medium">{badge.label}</span>
-            </div>
-        );
     };
 
     if (!user) return null;

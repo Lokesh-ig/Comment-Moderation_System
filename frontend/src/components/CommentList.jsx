@@ -69,7 +69,10 @@ const CommentList = ({ comments = [], onReply, onDelete, loading = false }) => {
         );
     }
 
-    if (!comments || comments.length === 0) {
+    // Filter allowed comments only
+    const allowedComments = comments.filter(c => !c.status || c.status === 'allowed');
+
+    if (!allowedComments || allowedComments.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-800">
@@ -84,8 +87,8 @@ const CommentList = ({ comments = [], onReply, onDelete, loading = false }) => {
     }
 
     // Group comments: Parents first, then their replies
-    const topLevelComments = comments.filter(c => !c.parent).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    const replies = comments.filter(c => c.parent);
+    const topLevelComments = allowedComments.filter(c => !c.parent).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const replies = allowedComments.filter(c => c.parent);
 
     return (
         <div className="space-y-6">
