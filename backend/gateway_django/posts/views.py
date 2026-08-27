@@ -241,10 +241,13 @@ class UserSearchView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        query = self.request.query_params.get('q', '')
+        query = self.request.query_params.get('q', '').strip()
         if query:
-            return Profile.objects.filter(user__username__icontains=query).exclude(user=self.request.user)
-        return Profile.objects.none()
+            return Profile.objects.filter(
+                Q(user__username__icontains=query) | Q(user__email__icontains=query)
+            ).exclude(user=self.request.user)
+        # If no query provided, return all registered user accounts
+        return Profile.objects.exclude(user=self.request.user).order_by('-user__date_joined')
 
 # Post Views
 class PostListView(generics.ListCreateAPIView):

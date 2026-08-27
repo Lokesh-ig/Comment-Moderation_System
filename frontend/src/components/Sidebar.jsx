@@ -124,20 +124,22 @@ const Sidebar = () => {
 
     const handleSearch = async (query) => {
         setSearchQuery(query);
-        if (query.length >= 1) {
-            setIsSearching(true);
-            try {
-                const res = await searchUsers(query);
-                setSearchResults(res.data);
-            } catch (err) {
-                console.error('Search failed:', err);
-            } finally {
-                setIsSearching(false);
-            }
-        } else {
-            setSearchResults([]);
+        setIsSearching(true);
+        try {
+            const res = await searchUsers(query);
+            setSearchResults(res.data);
+        } catch (err) {
+            console.error('Search failed:', err);
+        } finally {
+            setIsSearching(false);
         }
     };
+
+    useEffect(() => {
+        if (isSearchOpen) {
+            handleSearch('');
+        }
+    }, [isSearchOpen]);
 
     const handleFollow = async (username) => {
         try {
@@ -441,8 +443,11 @@ const Sidebar = () => {
                                                 )}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-bold dark:text-white truncate">{u.username}</span>
-                                                <span className="text-[11px] text-gray-400 truncate font-bold uppercase tracking-tighter">{u.bio || 'Creator'}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-sm font-bold dark:text-white truncate">{u.username}</span>
+                                                    <span className="text-[10px] font-mono font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/50">ID: #{u.user_id || u.id}</span>
+                                                </div>
+                                                <span className="text-[11px] text-gray-400 truncate font-bold uppercase tracking-tighter">{u.bio || 'ModChat Account'}</span>
                                             </div>
                                         </Link>
                                         {u.username !== user?.username && (

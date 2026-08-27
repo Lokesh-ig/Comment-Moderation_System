@@ -16,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user_id = serializers.ReadOnlyField(source='user.id')
     username = serializers.CharField(source='user.username', required=False, validators=[])
     email = serializers.EmailField(source='user.email', required=False, validators=[])
     follower_count = serializers.SerializerMethodField()
@@ -27,7 +28,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'username', 'email', 'avatar', 'avatar_url', 'bio', 'follower_count', 'following_count', 'is_following', 'is_staff', 'is_active', 'two_factor_enabled']
+        fields = ['id', 'user_id', 'username', 'email', 'avatar', 'avatar_url', 'bio', 'follower_count', 'following_count', 'is_following', 'is_staff', 'is_active', 'two_factor_enabled']
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})
