@@ -113,9 +113,25 @@ const CommentItem = ({ comment, index = 0, onReply, onDelete }) => {
                     )}
                 </div>
 
-                <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 leading-relaxed break-words">
-                    {comment.text}
-                </p>
+                {comment.status === 'deleted' ? (
+                    <p className="text-xs font-medium italic text-red-500 dark:text-red-400 mt-1 flex items-center gap-1.5 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/40">
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        [This comment was automatically removed for violating community guidelines.]
+                    </p>
+                ) : comment.status === 'flagged' ? (
+                    <p className="text-xs font-medium italic text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-900/40">
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" />
+                        </svg>
+                        [⚠️ This comment was flagged for review by moderators.]
+                    </p>
+                ) : (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 leading-relaxed break-words">
+                        {comment.text}
+                    </p>
+                )}
 
                 <div className="mt-1.5 flex items-center gap-4">
                     <button
