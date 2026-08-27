@@ -1,7 +1,7 @@
 django>=5.0
 djangorestframework
 django-cors-headers
-rest_framework_simplejwt
+djangorestframework-simplejwt
 requests
 pillow
 gunicorn
