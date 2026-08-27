@@ -24,7 +24,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return obj.author == request.user
         return False
 
-AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://127.0.0.1:5000/predict")
+AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "https://lokesh1525-comment-moderation-api.hf.space")
 
 # Auth Views
 class RegisterView(APIView):
@@ -312,18 +312,6 @@ def create_comment(request):
         except Comment.DoesNotExist:
             return Response({"error": "Parent comment not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # High-precision Profanity & Toxicity Keyword Dictionary Fallback
-    PROFANITY_KEYWORDS = {
-        "fuck", "fucking", "fucked", "fucker", "shit", "bitch", "cunt", "asshole", 
-        "bastard", "dick", "pussy", "slut", "whore", "nigger", "nigga", "kill", "die",
-        "idiot", "dumb", "stupid", "hate", "suck", "retard"
-    }
-
-    text_lower = text.lower()
-    text_words = set(text_lower.split())
-    has_profanity = bool(PROFANITY_KEYWORDS.intersection(text_words)) or any(w in text_lower for w in ["fuck", "bitch", "cunt", "nigger", "asshole", "shithead"])
-
-    scores = {}
     try:
         if "hf.space" in AI_SERVICE_URL:
             url = AI_SERVICE_URL if ("/call/predict" in AI_SERVICE_URL or "/api/predict" in AI_SERVICE_URL) else f"{AI_SERVICE_URL.rstrip('/')}/api/predict"
@@ -334,58 +322,28 @@ def create_comment(request):
             response = requests.post(AI_SERVICE_URL, json={"text": text}, timeout=10)
             scores = response.json()
     except Exception:
-        scores = {}
+        scores = {"toxic": 0.0, "severe_toxic": 0.0, "obscene": 0.0, "threat": 0.0, "insult": 0.0, "identity_hate": 0.0}
 
-    if not isinstance(scores, dict):
-        scores = {}
+    # Double-layer check: Keyword toxic filter fallback
+    profane_keywords = ['bad', 'hate', 'stupid', 'idiot', 'ugly', 'trash', 'dumb', 'kill', 'die', 'abuse', 'bastard', 'bitch', 'asshole', 'fuck', 'shit', 'fucking']
+    if any(w in text.lower() for w in profane_keywords):
+        if scores.get("toxic", 0.0) < 0.5:
+            scores["toxic"] = 0.85
 
-    # Apply profanity dictionary boost if keyword matched
-    if has_profanity:
-        scores["toxic"] = max(scores.get("toxic", 0.0), 0.95)
-        scores["obscene"] = max(scores.get("obscene", 0.0), 0.98)
-
-    toxic_score = float(scores.get("toxic", 0.0))
-    obscene_score = float(scores.get("obscene", 0.0))
-    insult_score = float(scores.get("insult", 0.0))
-    severe_toxic_score = float(scores.get("severe_toxic", 0.0))
-    threat_score = float(scores.get("threat", 0.0))
-    identity_hate_score = float(scores.get("identity_hate", 0.0))
-
-    max_score = max(toxic_score, obscene_score, insult_score, severe_toxic_score, threat_score, identity_hate_score)
-
-    # Threshold evaluation: >= 0.50 -> deleted, >= 0.25 -> flagged, else allowed
-    if max_score >= 0.50:
-        status_val = "deleted"
-    elif max_score >= 0.25:
-        status_val = "flagged"
-    else:
-        status_val = "allowed"
+    toxic_score = scores.get("toxic", 0.0)
+    status_val = "deleted" if toxic_score > 0.7 else "flagged" if toxic_score > 0.4 else "allowed"
 
     comment = Comment.objects.create(
         text=text, user=request.user, post=post, status=status_val,
         parent=parent_comment,
-        toxic=toxic_score, severe_toxic=severe_toxic_score,
-        obscene=obscene_score, threat=threat_score,
-        insult=insult_score, identity_hate=identity_hate_score
+        toxic=scores.get("toxic", 0.0), severe_toxic=scores.get("severe_toxic", 0.0),
+        obscene=scores.get("obscene", 0.0), threat=scores.get("threat", 0.0),
+        insult=scores.get("insult", 0.0), identity_hate=scores.get("identity_hate", 0.0)
     )
 
-    message = "Comment Approved" if status_val == "allowed" else ("Comment Flagged for Review" if status_val == "flagged" else "Comment Deleted: Violates community guidelines")
-
-    # Trigger notification if not own post and allowed
-    if post.author != request.user and status_val == "allowed":
+    # Trigger notification if not own post
+    if post.author != request.user:
         Notification.objects.create(
-            recipient=post.author,
-            actor=request.user,
-            verb='commented on your post',
-            target_post=post
-        )
-
-    return Response({
-        "status": status_val,
-        "message": message,
-        "toxic_score": max_score,
-        "comment": CommentSerializer(comment, context={'request': request}).data if status_val == "allowed" else None
-    }, status=status.HTTP_201_CREATED)
             recipient=post.author,
             sender=request.user,
             notification_type='comment',
