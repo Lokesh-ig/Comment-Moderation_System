@@ -162,10 +162,14 @@ const Sidebar = () => {
         navigate(`/profile/${user?.username || 'me'}?tab=saved`);
     };
 
-    const handleSwitchAccount = (account) => {
+    const handleSwitchAccount = async (account) => {
         setIsMoreOpen(false);
-        switchAccount(account);
-        navigate('/');
+        const success = await switchAccount(account);
+        if (success) {
+            navigate('/');
+        } else {
+            navigate('/login', { state: { username: account.username, message: `Session for ${account.username} expired. Please sign in again.` } });
+        }
     };
 
     const otherAccounts = savedAccounts.filter(a => a.username !== user?.username);

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -8,6 +8,16 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.username) {
+            setForm(prev => ({ ...prev, username: location.state.username }));
+        }
+        if (location.state?.message) {
+            setError(location.state.message);
+        }
+    }, [location.state]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });

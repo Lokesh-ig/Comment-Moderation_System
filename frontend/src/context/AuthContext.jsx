@@ -81,18 +81,34 @@ export const AuthProvider = ({ children }) => {
         if (currentUser) removeAccountFromList(currentUser);
     };
 
-    const switchAccount = (account) => {
+    const switchAccount = async (account) => {
         // Save current account first
         const currentToken = localStorage.getItem('access_token');
         if (user && currentToken) {
             saveAccountToList(user, currentToken);
         }
-        // Switch to selected account
+        // Switch to selected account token
         localStorage.setItem('access_token', account.access_token);
         const userObj = { username: account.username, avatar_url: account.avatar_url };
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
-        refreshProfile();
+
+        try {
+            const res = await getMyProfile();
+            const profileData = res.data;
+            const mergedUser = { ...userObj, ...profileData };
+            localStorage.setItem('user', JSON.stringify(mergedUser));
+            setUser(mergedUser);
+            saveAccountToList(mergedUser, account.access_token);
+            return true;
+        } catch (err) {
+            // Saved token is invalid or expired
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            removeAccountFromList(account.username);
+            setUser(null);
+            return false;
+        }
     };
 
     const refreshProfile = async () => {
