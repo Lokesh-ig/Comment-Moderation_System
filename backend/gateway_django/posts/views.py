@@ -25,7 +25,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return obj.author == request.user
         return False
 
-AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "https://lokesh1525-comment-moderation-api.hf.space")
+AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://127.0.0.1:5000/predict")
 
 # Auth Views
 class RegisterView(APIView):
@@ -324,8 +324,11 @@ def create_comment(request):
     if not scores:
         service_urls = [
             os.environ.get("AI_SERVICE_URL"),
+            "http://127.0.0.1:5000/predict",
+            "http://localhost:5000/predict",
             "https://comment-moderationsystem-production.up.railway.app/predict",
             "http://comment-moderationsystem.railway.internal:5000/predict",
+            "https://lokesh1525-comment-moderation-api.hf.space/predict",
             "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
         ]
         for url in service_urls:

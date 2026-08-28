@@ -746,7 +746,7 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-center md:justify-start gap-10 mb-8 border-y md:border-none py-4 md:py-0 border-gray-100 dark:border-gray-900">
+                    <div className="flex justify-center md:justify-start gap-6 sm:gap-10 mb-8 border-y md:border-none py-4 md:py-0 border-gray-100 dark:border-gray-900">
                         <div className="flex flex-col md:flex-row items-center gap-1">
                             <span className="font-black text-gray-900 dark:text-white text-lg">{userPosts.length}</span>
                             <span className="text-gray-500 text-xs font-bold uppercase tracking-widest">posts</span>
@@ -823,7 +823,7 @@ const Profile = () => {
 
             {/* Tabs Navigation */}
             <div className="border-t border-gray-100 dark:border-gray-900">
-                <div className="flex justify-center gap-16">
+                <div className="flex justify-center gap-6 sm:gap-16">
                     {[
                         { id: 'posts', label: 'POSTS', icon: FiGrid },
                         { id: 'saved', label: 'SAVED', icon: FiBookmark },

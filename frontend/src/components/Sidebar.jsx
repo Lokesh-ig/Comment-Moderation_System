@@ -178,7 +178,7 @@ const Sidebar = () => {
 
     return (
         <>
-            <aside className={`fixed left-0 top-0 h-screen transition-all duration-300 z-[60] border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-black p-3 md:p-4 flex flex-col justify-between group overflow-hidden ${isSearchOpen ? 'w-16' : 'w-16 hover:w-64 md:hover:w-64'}`}>
+            <aside className={`hidden md:flex fixed left-0 top-0 h-screen transition-all duration-300 z-[60] border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-black p-3 md:p-4 flex-col justify-between group overflow-hidden ${isSearchOpen ? 'w-16' : 'w-16 hover:w-64 md:hover:w-64'}`}>
                 <div className="flex flex-col h-full">
                     {/* Logo Section */}
                     <Link to="/" style={{ marginBottom: '32px' }} className="flex items-center gap-3 px-3 py-4 hover:opacity-80 transition-opacity">
@@ -269,7 +269,54 @@ const Sidebar = () => {
                         )}
                     </div>
                 </div>
-            </aside >
+            </aside>
+
+            {/* Mobile Bottom Navigation Bar (Instagram-style) */}
+            <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 z-[60] flex-row items-center justify-around px-2 shadow-2xl">
+                {menuItems.map((item, i) => (
+                    <Link
+                        key={i}
+                        to={item.path}
+                        onClick={item.onClick}
+                        className={`flex items-center justify-center p-2 rounded-xl transition-all duration-200 relative ${isActive(item.path) && !isSearchOpen
+                            ? 'text-indigo-600 dark:text-indigo-400 font-bold scale-110'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-indigo-500'
+                            }`}
+                    >
+                        <div className="relative flex items-center justify-center w-7 h-7">
+                            {item.isProfile ? (
+                                <div className={`w-7 h-7 rounded-full overflow-hidden border-2 ${isActive(item.path) ? 'border-indigo-500' : 'border-gray-300 dark:border-gray-700'}`}>
+                                    {user?.avatar_url ? (
+                                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FiUser size={18} />
+                                    )}
+                                </div>
+                            ) : (
+                                <item.icon
+                                    size={24}
+                                    className={`transition-transform duration-200 ${isActive(item.path) && !isSearchOpen ? 'stroke-[2.5px]' : ''}`}
+                                />
+                            )}
+                            {item.unreadCount > 0 && (
+                                <div className="absolute -top-1 -right-1.5 min-w-[16px] h-[16px] bg-red-500 rounded-full border-2 border-white dark:border-black flex items-center justify-center px-1">
+                                    <span className="text-[8px] text-white font-black">
+                                        {item.unreadCount > 9 ? '9+' : item.unreadCount}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </Link>
+                ))}
+
+                {/* Mobile More Menu Toggle Button */}
+                <button
+                    onClick={() => setIsMoreOpen(!isMoreOpen)}
+                    className={`flex items-center justify-center p-2 rounded-xl text-gray-700 dark:text-gray-300 transition-all ${isMoreOpen ? 'text-indigo-500 scale-110' : ''}`}
+                >
+                    {isMoreOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+                </button>
+            </nav>
 
             {/* More Menu Popup — Fixed position so it's not clipped by sidebar overflow */}
             {isMoreOpen && (
@@ -400,10 +447,17 @@ const Sidebar = () => {
             )}
 
             {/* Search Drawer Overlay */}
-            < div className={`fixed top-0 bottom-0 left-0 bg-white dark:bg-black border-r border-gray-100 dark:border-gray-900 transition-all duration-300 z-[55] shadow-2xl ${isSearchOpen ? 'translate-x-16 w-[350px] opacity-100' : '-translate-x-full w-0 opacity-0'}`
-            }>
-                <div className="p-6 h-full flex flex-col">
-                    <h2 className="text-2xl font-black mb-6 dark:text-white">Search</h2>
+            <div className={`fixed top-0 bottom-16 md:bottom-0 left-0 right-0 md:right-auto bg-white dark:bg-black border-r border-gray-100 dark:border-gray-900 transition-all duration-300 z-[70] md:z-[55] shadow-2xl ${isSearchOpen ? 'translate-y-0 md:translate-y-0 md:translate-x-16 w-full md:w-[350px] opacity-100' : 'translate-y-full md:translate-y-0 md:-translate-x-full w-full md:w-0 opacity-0 pointer-events-none'}`}>
+                <div className="p-4 md:p-6 h-full flex flex-col">
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <h2 className="text-2xl font-black dark:text-white">Search</h2>
+                        <button
+                            onClick={() => setIsSearchOpen(false)}
+                            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            <FiX size={22} />
+                        </button>
+                    </div>
                     <div className="relative mb-6">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                             <FiSearch

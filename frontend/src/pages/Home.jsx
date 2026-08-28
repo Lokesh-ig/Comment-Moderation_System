@@ -61,28 +61,28 @@ const Home = () => {
 
     return (
         <div className="w-full max-w-[600px] mx-auto min-h-screen pb-20 px-0 sm:px-4">
-            {/* Minimal Header for Mobile & Notifications */}
-            <header className="sticky top-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-[40] px-4 py-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-900 transition-all duration-300 sm:hidden">
-                <Link to="/" className="w-9 h-9 rounded-[30%] bg-gradient-to-br from-[#6366f1] via-[#a855f7] to-[#ec4899] flex items-center justify-center shadow-lg relative">
-                    <svg className="w-8.5 h-8.5 transform rotate-[15deg]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="homeInGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#4c1d95" />
-                                <stop offset="100%" stopColor="#be123c" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M50 20 C33.43 20 20 33.43 20 50 C20 66.57 33.43 80 50 80 C54.55 80 58.85 78.98 62.69 77.16 L81 81 L75.16 67.69 C78.25 62.77 80 57.14 80 50 C80 33.43 66.57 20 50 20 Z" fill="url(#homeInGrad)" />
-                        <path d="M52 35 L38 55 H48 L46 75 L62 50 H52 L54 35 Z" fill="#fef08a" />
-                    </svg>
+            {/* Minimal Header for Mobile */}
+            <header className="sticky top-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-[40] px-4 py-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-900 transition-all duration-300 md:hidden">
+                <Link to="/" className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-[30%] bg-gradient-to-br from-[#6366f1] via-[#a855f7] to-[#ec4899] flex items-center justify-center shadow-lg relative">
+                        <svg className="w-7.5 h-7.5 transform rotate-[15deg]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="homeInGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#4c1d95" />
+                                    <stop offset="100%" stopColor="#be123c" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 20 C33.43 20 20 33.43 20 50 C20 66.57 33.43 80 50 80 C54.55 80 58.85 78.98 62.69 77.16 L81 81 L75.16 67.69 C78.25 62.77 80 57.14 80 50 C80 33.43 66.57 20 50 20 Z" fill="url(#homeInGrad)" />
+                            <path d="M52 35 L38 55 H48 L46 75 L62 50 H52 L54 35 Z" fill="#fef08a" />
+                        </svg>
+                    </div>
+                    <span className="text-xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                        ModChat
+                    </span>
                 </Link>
-                <div className="flex items-center gap-2">
-                    <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-400 transition-colors">
-                        <FiBell size={22} className="stroke-[2.5px]" />
-                    </button>
-                    <Link to={`/profile`} className="w-8 h-8 rounded-full border-2 border-indigo-500/30 p-[2px]">
-                        <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                            <FiUser size={14} className="text-gray-400" />
-                        </div>
+                <div className="flex items-center gap-1">
+                    <Link to="/notifications" className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-500 transition-colors">
+                        <FiBell size={20} className="stroke-[2.5px]" />
                     </Link>
                 </div>
             </header>

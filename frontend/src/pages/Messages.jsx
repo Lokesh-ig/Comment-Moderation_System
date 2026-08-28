@@ -288,7 +288,7 @@ const Messages = () => {
     }
 
     return (
-        <div className="w-full flex-1 min-w-0 h-[calc(100vh-2rem)] my-0 sm:my-4 rounded-none sm:rounded-3xl bg-white dark:bg-gray-950 border-0 sm:border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden flex flex-row relative">
+        <div className="w-full flex-1 min-w-0 h-[calc(100vh-4rem)] md:h-[calc(100vh-2rem)] my-0 sm:my-4 rounded-none sm:rounded-3xl bg-white dark:bg-gray-950 border-0 sm:border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden flex flex-row relative">
             {/* Sidebar / Conversation List */}
             <div className={`w-full md:w-[320px] lg:w-[350px] shrink-0 border-r border-gray-100 dark:border-gray-900 flex flex-col bg-gray-50/50 dark:bg-gray-900/20 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-900 bg-white dark:bg-black flex items-center justify-between z-10 sticky top-0">

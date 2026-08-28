@@ -85,10 +85,9 @@ const AppContent = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-black transition-colors text-gray-900 dark:text-gray-100 selection:bg-indigo-500/30">
       {!isAuthPage && <Sidebar />}
 
-      {/* Main Content Area - Shifted to account for fixed 16-unit sidebar */}
+      {/* Main Content Area - Shifted for desktop sidebar / mobile bottom nav */}
       <main
-        style={{ paddingLeft: isAuthPage ? '0' : '4rem' }}
-        className="flex-1 min-w-0 min-h-screen overflow-x-hidden transition-all duration-300"
+        className={`flex-1 min-w-0 min-h-screen overflow-x-hidden transition-all duration-300 ${isAuthPage ? 'pl-0 pb-0' : 'pl-0 pb-16 md:pb-0 md:pl-16'}`}
       >
         <div className={`${isAuthPage ? 'w-full' : 'w-full max-w-7xl mx-auto flex justify-center px-0 sm:px-4'} min-h-screen`}>
           <Suspense fallback={<LoadingFallback />}>
