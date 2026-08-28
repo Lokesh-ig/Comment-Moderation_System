@@ -242,6 +242,10 @@ class UserSearchView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Ensure all existing User objects have an associated Profile
+        for u in User.objects.all():
+            Profile.objects.get_or_create(user=u)
+
         query = self.request.query_params.get('q', '').strip()
         if query:
             return Profile.objects.filter(

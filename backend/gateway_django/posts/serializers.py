@@ -161,8 +161,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         username_or_email = attrs.get(self.username_field)
         
         if username_or_email:
-            user_obj = User.objects.filter(username__iexact=username_or_email).first() or \
-                       User.objects.filter(email__iexact=username_or_email).first()
+            clean_input = username_or_email.strip()
+            user_obj = User.objects.filter(username__iexact=clean_input).first() or \
+                       User.objects.filter(email__iexact=clean_input).first()
             if user_obj:
                 attrs[self.username_field] = user_obj.username
 
@@ -185,11 +186,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             except Exception as e:
                 print(f"Failed to record login activity: {e}")
 
+        avatar_url = None
+        if hasattr(self.user, 'profile') and self.user.profile.avatar:
+            avatar_url = self.user.profile.avatar.url
+
         data['user'] = {
             'id': self.user.id,
             'username': self.user.username,
             'email': self.user.email,
             'is_staff': self.user.is_staff,
+            'avatar_url': avatar_url,
         }
         return data
 
