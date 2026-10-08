@@ -323,13 +323,14 @@ def create_comment(request):
         except (ValueError, TypeError):
             return default
 
-    # 1. Try direct in-process PyTorch model prediction first
+    # 1. Try direct in-process PyTorch model prediction first (skip on Render to prevent OOM)
     scores = None
-    try:
-        from .ai_loader import get_direct_prediction
-        scores = get_direct_prediction(text)
-    except Exception:
-        scores = None
+    if not os.environ.get("RENDER") and not os.environ.get("DISABLE_DIRECT_AI"):
+        try:
+            from .ai_loader import get_direct_prediction
+            scores = get_direct_prediction(text)
+        except Exception:
+            scores = None
     
     # 2. Fallback to HTTP endpoints if direct prediction unavailable
     if not scores:
