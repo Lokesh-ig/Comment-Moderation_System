@@ -317,8 +317,19 @@ def create_comment(request):
             return Response({"error": "Parent comment not found"}, status=status.HTTP_404_NOT_FOUND)
 
     # 1. Try direct in-process PyTorch model prediction first
-    from .ai_loader import get_direct_prediction
-    scores = get_direct_prediction(text)
+    def _to_float(val, default=0.0):
+        try:
+            return float(val) if val is not None else default
+        except (ValueError, TypeError):
+            return default
+
+    # 1. Try direct in-process PyTorch model prediction first
+    scores = None
+    try:
+        from .ai_loader import get_direct_prediction
+        scores = get_direct_prediction(text)
+    except Exception:
+        scores = None
     
     # 2. Fallback to HTTP endpoints if direct prediction unavailable
     if not scores:
@@ -326,8 +337,6 @@ def create_comment(request):
             os.environ.get("AI_SERVICE_URL"),
             "http://127.0.0.1:5000/predict",
             "http://localhost:5000/predict",
-            "https://comment-moderationsystem-production.up.railway.app/predict",
-            "http://comment-moderationsystem.railway.internal:5000/predict",
             "https://lokesh1525-comment-moderation-api.hf.space/predict",
             "https://lokesh1525-comment-moderation-api.hf.space/api/predict"
         ]
@@ -356,17 +365,17 @@ def create_comment(request):
 
     fallback_status, fallback_scores = fallback_moderate(text)
 
-    if not scores or not isinstance(scores, dict):
+    if not scores or not isinstance(scores, dict) or "toxic" not in scores:
         scores = fallback_scores
         status_val = fallback_status
     else:
         scores_list = [
-            float(scores.get("toxic", 0.0)),
-            float(scores.get("severe_toxic", 0.0)),
-            float(scores.get("obscene", 0.0)),
-            float(scores.get("threat", 0.0)),
-            float(scores.get("insult", 0.0)),
-            float(scores.get("identity_hate", 0.0))
+            _to_float(scores.get("toxic")),
+            _to_float(scores.get("severe_toxic")),
+            _to_float(scores.get("obscene")),
+            _to_float(scores.get("threat")),
+            _to_float(scores.get("insult")),
+            _to_float(scores.get("identity_hate"))
         ]
         max_score = max(scores_list)
         
@@ -377,12 +386,19 @@ def create_comment(request):
         else:
             status_val = "allowed"
 
+    t_val = _to_float(scores.get("toxic"))
+    st_val = _to_float(scores.get("severe_toxic"))
+    o_val = _to_float(scores.get("obscene"))
+    th_val = _to_float(scores.get("threat"))
+    ins_val = _to_float(scores.get("insult"))
+    h_val = _to_float(scores.get("identity_hate"))
+
     comment = Comment.objects.create(
         text=text, user=request.user, post=post, status=status_val,
         parent=parent_comment,
-        toxic=scores.get("toxic", 0.0), severe_toxic=scores.get("severe_toxic", 0.0),
-        obscene=scores.get("obscene", 0.0), threat=scores.get("threat", 0.0),
-        insult=scores.get("insult", 0.0), identity_hate=scores.get("identity_hate", 0.0)
+        toxic=t_val, severe_toxic=st_val,
+        obscene=o_val, threat=th_val,
+        insult=ins_val, identity_hate=h_val
     )
 
     # Trigger notification if not own post
