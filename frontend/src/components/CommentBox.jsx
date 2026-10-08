@@ -62,7 +62,7 @@ const CommentBox = ({ postId, onCommentPosted, replyTo, onCancelReply }) => {
         } catch (err) {
             setResult({
                 status: 'error',
-                message: err.response?.data?.message || err.response?.data?.error || 'Failed to post comment',
+                message: err.response?.data?.detail || err.response?.data?.message || err.response?.data?.error || 'Failed to post comment',
             });
             setTimeout(() => setResult(null), 4000);
         } finally {
